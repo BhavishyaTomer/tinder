@@ -38,3 +38,15 @@ mongoose.connect(process.env.MONGO_DB_URI).then(()=>{
 }).catch(()=>{
     console.log("DB Problems")
 })
+
+
+
+
+// PORT=8000
+// MONGO_DB_URI=mongodb+srv://bhavishyatomer:WM34ZuDXJWlNEwfB@cluster0.8skve.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+// JWT_SECRET=secret1234
+// CLOUDINARY_API_KEY=862145599261932
+// CLOUDINARY_API_SECRET=hkef_aMZl6MOupqIgvyjqLmPkzU
+// CLOUDINARY_CLOUD_NAME=dy94jla0h
+// NODE_ENV=DEVELOPMENT
+// NODE_TLS_REJECT_UNAUTHORIZED=0
