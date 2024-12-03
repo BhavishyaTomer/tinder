@@ -113,7 +113,7 @@ export const loginUser = async (req, res) => {
         });
 
         res.status(200).json({
-            message: "Login successful",
+            message:"Sucess",
             user: {
                 id: existingUser._id,
                 fullName: existingUser.fullName,
@@ -181,6 +181,8 @@ export const updateUserDetails = async (req, res) => {
 export const myInfo=async(req,res)=>{
     try {
        const myUser=req.user;
+
+      
        res.status(200).json({
         message:"Sucess",
         myUser
