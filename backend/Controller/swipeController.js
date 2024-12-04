@@ -1,9 +1,11 @@
+import mongoose from "mongoose";
 import { user } from "../Schema/user.schema.js"
 
 export const likeMeDaddy = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const userToBeLiked = await user.findById(userId);
+        const { id } = req.params;
+        
+        const userToBeLiked = await user.findById(id);
         const originalUser = await user.findById(req.user._id);
 
         if (!userToBeLiked) {
@@ -50,8 +52,8 @@ export const likeMeDaddy = async (req, res) => {
 
 export const disLikeMeDaddy=async(req,res)=>{
     try {
-        const {userId}=req.params
-        const userToBeDisLiked=await user.findById(userId)
+        const {id}=req.params
+        const userToBeDisLiked=await user.findById(id)
         if (!userToBeDisLiked) {
             return res.status(404).json({
                 success: false,
@@ -114,34 +116,52 @@ export const getMyMatches = async (req, res) => {
     }
 };
 
-
-export const showMeProfile=async(req,res)=>{
+export const showMeProfile = async (req, res) => {
     try {
-    
-        const {page=1}=req.query;
-        const pageSize=10;
-        const skipProfiles=(page-1)*pageSize;
-        const profilesToShow=await user.find({_id:{$ne:req.user._id}}).skip(skipProfiles).limit(pageSize).exec();
-       
-        if(!profilesToShow)
-        {
-            res.status(500).json({
-                message:"no more profiles to show"
-            })
-        }
+      const { page = 1 } = req.query;
+      const pageSize = 10;
+      const skipProfiles = (page - 1) * pageSize;
+  
+      // Ensure req.user._id is converted to ObjectId
+      const currentUserId = new mongoose.Types.ObjectId(req.user._id);
+  
+      // Ensure likes and disLikes are arrays of ObjectId
+      const likes = (req.user.likes || []).map((id) => new mongoose.Types.ObjectId(id));
+      const disLikes = (req.user.disLikes || []).map((id) => new mongoose.Types.ObjectId(id));
+  
+      // Query to find profiles excluding the current user and liked/disliked users
+      const profilesToShow = await user
+        .find({
+          _id: {
+            $ne: currentUserId, // Exclude the current user
+            $nin: [...likes, ...disLikes], // Exclude liked/disliked users
+          },
+        })
+        .skip(skipProfiles)
+        .limit(pageSize)
+        .exec();
+  
+      if (!profilesToShow || profilesToShow.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "No more profiles to show",
+          profilesToShow: [],
+        });
+      }
+  
 
-       console.log("profiles to show",profilesToShow)
-        res.status(200).json({
-            success: true,
-            profilesToShow,
-            page,
-            pageSize,
-        });
+  
+      res.status(200).json({
+        success: true,
+        profilesToShow,
+        page,
+        pageSize,
+      });
     } catch (error) {
-        console.error("Error in getting profiles:", error);
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+      console.error("Error in getting profiles:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
-}
+  };
