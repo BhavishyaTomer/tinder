@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { user } from "../Schema/user.schema.js"
+import { getConnectedUsers, getIO } from "../socket/socket.server.js";
 
 export const likeMeDaddy = async (req, res) => {
     try {
@@ -32,7 +33,27 @@ export const likeMeDaddy = async (req, res) => {
             // Save both users at the same time
             await Promise.all([originalUser.save(), userToBeLiked.save()]);
         }
+        const connectedUsers = getConnectedUsers();
+        const io = getIO();
 
+        const likedUserSocketId = connectedUsers.get(userToBeLiked);
+
+        if (likedUserSocketId) {
+            io.to(likedUserSocketId).emit("newMatch", {
+                _id: originalUser._id,
+                name: originalUser.fullName,
+                image: originalUser.ImageUrl,
+            });
+        }
+
+        const currentSocketId = connectedUsers.get(originalUser);
+        if (currentSocketId) {
+            io.to(currentSocketId).emit("newMatch", {
+                _id: userToBeLiked._id,
+                name: userToBeLiked.name,
+                image: userToBeLiked.ImageUrl,
+            });
+        }
         userToBeLiked.likes.push(req.user);
         await userToBeLiked.save();
 
@@ -137,9 +158,11 @@ export const showMeProfile = async (req, res) => {
             $nin: [...likes, ...disLikes], // Exclude liked/disliked users
           },
         })
+        .sort({ createdAt: -1 }) 
         .skip(skipProfiles)
         .limit(pageSize)
         .exec();
+        console.log("profile",profilesToShow)
   
       if (!profilesToShow || profilesToShow.length === 0) {
         return res.status(200).json({

@@ -85,35 +85,32 @@ export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check if email and password are provided
         if (!email || !password) {
             return res.status(400).json({ message: "Enter email and password" });
         }
 
-        // Find user by email
-        const existingUser = await user.findOne({ email }).select("+password"); // Explicitly include password
+        const existingUser = await user.findOne({ email }).select("+password");
         if (!existingUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Validate password
         const isPasswordValid = await existingUser.matchPassword(password);
+        console.log(isPasswordValid)
         if (!isPasswordValid) {
+            console.log("Entered Password:", password);
+            console.log("Stored Hashed Password:", existingUser.password);
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        // Generate JWT token
         const token = signToken(existingUser._id);
-
-        // Set token as HTTP-only cookie
         res.cookie("jwt", token, {
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-            httpOnly: true, // Prevent XSS attacks
-            sameSite: "strict", // Prevent CSRF attacks
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            sameSite: "strict",
         });
 
         res.status(200).json({
-            message:"Sucess",
+            message: "Success",
             myUser: {
                 id: existingUser._id,
                 fullName: existingUser.fullName,
@@ -125,8 +122,7 @@ export const loginUser = async (req, res) => {
         console.error("Error in loginUser:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
-}
-
+};
 
 export const logout = async (req, res) => {
 	res.clearCookie("jwt");

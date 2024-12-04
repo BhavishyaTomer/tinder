@@ -7,17 +7,20 @@ import path from 'path'
 import cookieParser from 'cookie-parser';
 import userRouter from './Route/userRoute.js';
 import matchRouter from './Route/matchRoute.js';
+import { createServer } from 'http';
+import { initializeSocket } from './socket/socket.server.js';
 
 
 const app=express()
 const __dirname=path.resolve()
-
+const httpServer=createServer(app)
 dotenv.config()
 app.use(cors({
     origin: 'http://localhost:3000', 
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type'], 
 }));
+initializeSocket(httpServer)
 app.use(express.json())
 app.use(cookieParser())
 app.use(fileUpload(
@@ -32,7 +35,7 @@ app.use("/api",matchRouter)
 
 
 mongoose.connect(process.env.MONGO_DB_URI).then(()=>{
-    app.listen(process.env.PORT,()=>{
+    httpServer.listen(process.env.PORT,()=>{
         console.log("server is started at ",process.env.PORT)
     })
 }).catch(()=>{

@@ -20,7 +20,8 @@ const userSchema= new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true
+        required:true,
+        select: false,
     }
     ,
     weight:{
@@ -65,9 +66,13 @@ const userSchema= new mongoose.Schema({
 },{timestamps:true})
 
 userSchema.pre("save", async function (next) {
-	this.password = await bcrypt.hash(this.password, 10);
-	next();
+    if (!this.isModified("password")) {
+        return next(); // Skip hashing if the password is not modified
+    }
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
 });
+
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
 	return await bcrypt.compare(enteredPassword, this.password);
