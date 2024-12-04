@@ -72,7 +72,7 @@ export const createUser = async (req, res) => {
 			sameSite: "strict", // prevents CSRF attacks
 		});
 
-        res.status(201).json({ message: "User created successfully", user: createdUser });
+        res.status(201).json({ message: "User created successfully", myUser: createdUser });
     } catch (error) {
         console.error("Error in createUser:", error);
         res.status(500).json({ message: "Internal Server Error" });
@@ -114,7 +114,7 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({
             message:"Sucess",
-            user: {
+            myUser: {
                 id: existingUser._id,
                 fullName: existingUser.fullName,
                 email: existingUser.email,
@@ -185,7 +185,12 @@ export const myInfo=async(req,res)=>{
       
        res.status(200).json({
         message:"Sucess",
-        myUser
+        myUser:{
+            id: myUser._id,
+                fullName: myUser.fullName,
+                email: myUser.email,
+                ImageUrl: myUser.ImageUrl,
+        }
        }) 
     } catch (error) {
         res.status(500).json({
