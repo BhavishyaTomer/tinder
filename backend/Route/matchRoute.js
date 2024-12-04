@@ -7,7 +7,7 @@ const matchRouter=express.Router()
 matchRouter.get("/swipe-right/:id",protectRoute,likeMeDaddy)
 matchRouter.get("/swipe-left/:id",protectRoute,disLikeMeDaddy)
 matchRouter.get("/getmymatches",protectRoute,getMyMatches)
-matchRouter.get("/show-profiles",showMeProfile)
+matchRouter.get("/show-profiles",protectRoute,showMeProfile)
 
 
 

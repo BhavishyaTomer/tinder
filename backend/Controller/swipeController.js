@@ -31,7 +31,6 @@ export const likeMeDaddy = async (req, res) => {
             await Promise.all([originalUser.save(), userToBeLiked.save()]);
         }
 
-        // Add the user to the liked list
         userToBeLiked.likes.push(req.user);
         await userToBeLiked.save();
 
@@ -118,16 +117,20 @@ export const getMyMatches = async (req, res) => {
 
 export const showMeProfile=async(req,res)=>{
     try {
+    
         const {page=1}=req.query;
         const pageSize=10;
         const skipProfiles=(page-1)*pageSize;
-        const profilesToShow=user.find({_id:{$ne:req.user._id}}).skip(skipProfiles).limit(pageSize).exec();
+        const profilesToShow=await user.find({_id:{$ne:req.user._id}}).skip(skipProfiles).limit(pageSize).exec();
+       
         if(!profilesToShow)
         {
             res.status(500).json({
                 message:"no more profiles to show"
             })
         }
+
+       console.log("profiles to show",profilesToShow)
         res.status(200).json({
             success: true,
             profilesToShow,
@@ -135,6 +138,10 @@ export const showMeProfile=async(req,res)=>{
             pageSize,
         });
     } catch (error) {
-        
+        console.error("Error in getting profiles:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
     }
 }
