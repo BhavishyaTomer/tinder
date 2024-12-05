@@ -16,46 +16,54 @@ export const likeMeDaddy = async (req, res) => {
             });
         }
 
-        // Check if the user has already liked
-        if (userToBeLiked.likes.includes(req.user._id)) {
+    
+        if (originalUser.likes.includes(id)) {
             return res.status(400).json({
                 success: false,
                 message: "User already liked",
             });
         }
+        originalUser.likes.push(id)
+        await originalUser.save()
 
-        // Check if both users have liked each other (match)
-        if (originalUser.likes.includes(userToBeLiked._id)) {
-            // Add to matches for both users
+
+   
+        if (userToBeLiked.likes.includes(originalUser._id)) {
+
+            console.log("entered matching state")
             originalUser.matches.push(userToBeLiked);
             userToBeLiked.matches.push(originalUser);
 
-            // Save both users at the same time
+
             await Promise.all([originalUser.save(), userToBeLiked.save()]);
-        }
-        const connectedUsers = getConnectedUsers();
-        const io = getIO();
 
-        const likedUserSocketId = connectedUsers.get(userToBeLiked);
 
-        if (likedUserSocketId) {
-            io.to(likedUserSocketId).emit("newMatch", {
-                _id: originalUser._id,
-                name: originalUser.fullName,
-                image: originalUser.ImageUrl,
-            });
+            const connectedUsers = getConnectedUsers();
+            const io = getIO();
+    
+            const likedUserSocketId = connectedUsers.get(userToBeLiked._id.toString());
+             console.log("user to be liked id",likedUserSocketId)
+            if (likedUserSocketId) {
+                io.to(likedUserSocketId).emit("newMatch", {
+                    _id: originalUser._id,
+                    name: originalUser.fullName,
+                    image: originalUser.ImageUrl,
+                });
+            }
+    
+            const currentSocketId = connectedUsers.get(originalUser._id.toString());
+            console.log("original liked id",currentSocketId)
+            if (currentSocketId) {
+                io.to(currentSocketId).emit("newMatch", {
+                    _id: userToBeLiked._id,
+                    name: userToBeLiked.name,
+                    image: userToBeLiked.ImageUrl,
+                });
+            }
+            
+            
         }
-
-        const currentSocketId = connectedUsers.get(originalUser);
-        if (currentSocketId) {
-            io.to(currentSocketId).emit("newMatch", {
-                _id: userToBeLiked._id,
-                name: userToBeLiked.name,
-                image: userToBeLiked.ImageUrl,
-            });
-        }
-        userToBeLiked.likes.push(req.user);
-        await userToBeLiked.save();
+     
 
         res.status(200).json({
             success: true,
@@ -162,7 +170,7 @@ export const showMeProfile = async (req, res) => {
         .skip(skipProfiles)
         .limit(pageSize)
         .exec();
-        console.log("profile",profilesToShow)
+       
   
       if (!profilesToShow || profilesToShow.length === 0) {
         return res.status(200).json({
